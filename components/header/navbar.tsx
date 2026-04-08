@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { authClient } from "@/lib/auth-client";
 
 const navItems = [
   { label: "Home", href: "#home" },
@@ -17,6 +18,9 @@ type NavbarProps = {
 
 export default function Navbar({ activeItem = "Home" }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const { data: session, isPending } = authClient.useSession();
+  const user = session?.user;
+  const avatarLetter = (user?.name?.trim()?.charAt(0) || "U").toUpperCase();
 
   return (
     <header className="sticky top-0 z-50 w-full px-4 py-4 text-white sm:px-6 lg:px-8">
@@ -94,20 +98,48 @@ export default function Navbar({ activeItem = "Home" }: NavbarProps) {
           </nav>
 
           <div className="flex items-center justify-end gap-2 sm:gap-3">
+            {isPending ? (
+              <div className="size-10 rounded-full bg-white/10" aria-hidden="true" />
+            ) : user ? (
+              <Link
+                href="/dashboard"
+                aria-label={user.name ? `${user.name} profile` : "Profile"}
+                className="inline-flex items-center justify-center rounded-full ring-1 ring-white/20 transition hover:ring-white/40"
+              >
+                {user.image ? (
+                  <>
+                    <span
+                      aria-hidden="true"
+                      className="size-10 rounded-full bg-cover bg-center"
+                      style={{ backgroundImage: `url(${user.image})` }}
+                    />
+                    <span className="sr-only">
+                      {user.name ? `${user.name} avatar` : "User avatar"}
+                    </span>
+                  </>
+                ) : (
+                  <span className="inline-flex size-10 items-center justify-center rounded-full bg-fuchsia-500/80 text-sm font-semibold text-white">
+                    {avatarLetter}
+                  </span>
+                )}
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="inline-flex rounded-full bg-linear-to-r from-fuchsia-500 to-violet-500 px-4 py-2 text-sm font-medium text-white transition hover:brightness-110 sm:px-5 lg:hidden"
+                >
+                  Signup
+                </Link>
 
-            <Link
-              href="/login"
-              className="inline-flex rounded-full bg-linear-to-r from-fuchsia-500 to-violet-500 px-4 py-2 text-sm font-medium text-white transition hover:brightness-110 sm:px-5 lg:hidden"
-            >
-              Signup
-            </Link>
-
-            <Link
-              href="/login"
-              className="hidden rounded-full bg-linear-to-r from-fuchsia-500 to-violet-500 px-4 py-2 text-sm font-medium text-white transition hover:brightness-110 lg:inline-flex"
-            >
-              Signup
-            </Link>
+                <Link
+                  href="/login"
+                  className="hidden rounded-full bg-linear-to-r from-fuchsia-500 to-violet-500 px-4 py-2 text-sm font-medium text-white transition hover:brightness-110 lg:inline-flex"
+                >
+                  Signup
+                </Link>
+              </>
+            )}
           </div>
         </div>
 
@@ -136,12 +168,14 @@ export default function Navbar({ activeItem = "Home" }: NavbarProps) {
               })}
             </nav>
 
-            <Link
-              href="/login"
-              className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-linear-to-r from-fuchsia-500 to-violet-500 px-5 py-3 text-sm font-medium text-white transition hover:brightness-110"
-            >
-              Signup
-            </Link>
+            {!user && (
+              <Link
+                href="/login"
+                className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-linear-to-r from-fuchsia-500 to-violet-500 px-5 py-3 text-sm font-medium text-white transition hover:brightness-110"
+              >
+                Signup
+              </Link>
+            )}
           </div>
         )}
       </div>
