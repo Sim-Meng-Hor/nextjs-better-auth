@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import {nextCookies} from "better-auth/next-js";
 
 export const auth = betterAuth({
     //...other options
@@ -23,4 +24,8 @@ export const auth = betterAuth({
             clientSecret: process.env.FACEBOOK_CLIENT_SECRET as string,
         },
     },
+    plugins: [nextCookies()],
 });
+
+export type Session = typeof auth.$Infer.Session;
+export type User = typeof auth.$Infer.Session.user;
