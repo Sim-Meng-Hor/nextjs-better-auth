@@ -3,6 +3,7 @@
 import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
+import { toast } from "sonner"
 import * as z from "zod"
 
 import { Button } from "@/components/ui/button"
@@ -10,17 +11,27 @@ import {
     Card,
     CardContent,
     CardDescription,
+    CardFooter,
     CardHeader,
+    CardTitle,
 } from "@/components/ui/card"
 import {
     Field,
+    FieldDescription,
     FieldError,
     FieldGroup,
-    FieldLabel,
+    FieldLabel, FieldSeparator,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import {
+    InputGroup,
+    InputGroupAddon,
+    InputGroupText,
+    InputGroupTextarea,
+} from "@/components/ui/input-group"
 import {loginAdmin} from "@/lib/admin-auth";
 import {redirect} from "next/navigation";
+import {signInSocial} from "@/lib/action/auth-client";
 
 const formSchema = z.object({
     email: z
@@ -28,11 +39,10 @@ const formSchema = z.object({
     password: z
         .string()
         .min(4, "Password must be at least 4 characters.")
-})
+    })
 
-export function LoginForm() {
-    const [rememberMe, setRememberMe] = React.useState(true)
 
+export function FormLogin() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -41,61 +51,52 @@ export function LoginForm() {
         },
     })
 
-    async function onSubmit(data: z.infer<typeof formSchema>) {
+    async function handleSocialAuth(provider: "google" | "github"){
+        await signInSocial(provider)
+    }
+
+    async  function onSubmit(data: z.infer<typeof formSchema>) {
         let isSuccess = false;
-        try{
+        try {
             const res = await loginAdmin(data)
             isSuccess = true;
-            console.log("res after login", res)
-        }catch(error){
-            console.log("login form", error)
+            console.log('res after login ',res)
+        }catch (error) {
+            console.log('login form error :',error)
         }
 
-        if(isSuccess){
+        if (isSuccess) {
             redirect("/dashboard")
         }
-
     }
 
     return (
-        <Card className="w-full max-w-107.5 border-0 bg-transparent text-white shadow-none ring-0 pb-10">
-            <CardHeader className="items-center px-0 pt-2 pb-8 text-center">
-                <div className="mb-3 text-5xl font-black italic tracking-tight text-white">
-                    Event Booking
-                </div>
-                <CardDescription className="max-w-sm text-center text-xs text-white/45">
-                    Please enter your phone number to login
+        <Card className="w-full sm:max-w-md">
+            <CardHeader>
+                <CardTitle>Login Form</CardTitle>
+                <CardDescription>
+                    Sign In to Dashboard
                 </CardDescription>
             </CardHeader>
-            <CardContent className="px-0 pb-5">
-                <form id="form-rhf-demo" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <FieldGroup className="gap-4">
+            <CardContent>
+                <form id="form-rhf-demo" onSubmit={form.handleSubmit(onSubmit)}>
+                    <FieldGroup>
                         <Controller
                             name="email"
                             control={form.control}
                             render={({ field, fieldState }) => (
                                 <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel htmlFor="form-rhf-demo-email" className="text-xs font-medium text-white/35">
+                                    <FieldLabel htmlFor="form-rhf-demo-email">
                                         Email
                                     </FieldLabel>
-                                    <div className="relative">
-                                        <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-white/30">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="size-4">
-                                                <path d="M4 7.5h16v9H4z" />
-                                                <path d="m5 8 7 5 7-5" />
-                                            </svg>
-                                        </span>
-                                        <Input
-                                            {...field}
-                                            id="form-rhf-demo-email"
-                                            aria-invalid={fieldState.invalid}
-                                            placeholder=""
-                                            autoComplete="off"
-                                            className="h-11 rounded-lg border-white/6 bg-white/7 pl-10 text-sm text-white placeholder:text-white/20 focus-visible:border-fuchsia-400/40 focus-visible:ring-2 focus-visible:ring-fuchsia-500/15"
-                                        />
-                                    </div>
+                                    <Input
+                                        {...field}
+                                        id="form-rhf-demo-title"
+                                        aria-invalid={fieldState.invalid}
+                                        placeholder="Example@gmail.com"
+                                    />
                                     {fieldState.invalid && (
-                                        <FieldError className="text-xs" errors={[fieldState.error]} />
+                                        <FieldError errors={[fieldState.error]} />
                                     )}
                                 </Field>
                             )}
@@ -105,77 +106,71 @@ export function LoginForm() {
                             control={form.control}
                             render={({ field, fieldState }) => (
                                 <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel htmlFor="form-rhf-demo-password" className="text-xs font-medium text-white/35">
+                                    <FieldLabel htmlFor="form-rhf-demo-password">
                                         Password
                                     </FieldLabel>
-                                    <div className="relative">
-                                        <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-white/30">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="size-4">
-                                                <path d="M8 11V8a4 4 0 1 1 8 0v3" />
-                                                <path d="M6 11h12v9H6z" />
-                                            </svg>
-                                        </span>
-                                        <Input
-                                            {...field}
-                                            id="form-rhf-demo-password"
-                                            type="password"
-                                            aria-invalid={fieldState.invalid}
-                                            placeholder=""
-                                            autoComplete="off"
-                                            className="h-11 rounded-lg border-white/6 bg-white/7 pl-10 pr-10 text-sm text-white placeholder:text-white/20 focus-visible:border-fuchsia-400/40 focus-visible:ring-2 focus-visible:ring-fuchsia-500/15"
-                                        />
-                                        <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-white/30">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="size-4">
-                                                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" />
-                                                <circle cx="12" cy="12" r="2.5" />
-                                            </svg>
-                                        </span>
-                                    </div>
+                                    <Input
+                                        {...field}
+                                        id="form-rhf-demo-password"
+                                        aria-invalid={fieldState.invalid}
+                                        placeholder="**********"
+                                    />
                                     {fieldState.invalid && (
-                                        <FieldError className="text-xs" errors={[fieldState.error]} />
+                                        <FieldError errors={[fieldState.error]} />
                                     )}
                                 </Field>
                             )}
                         />
                     </FieldGroup>
-
-                    <div className="flex items-center justify-between gap-4 text-xs">
-                        <label className="flex cursor-pointer items-center gap-2 text-white/55">
-                            <input
-                                type="checkbox"
-                                // checked={rememberMe}
-                                onChange={() => setRememberMe((value) => !value)}
-                                className="size-3.5 rounded-sm border border-white/15 bg-white/5 accent-fuchsia-500"
-                            />
-                            <span>Remember me</span>
-                        </label>
-                        <button type="button" className="text-white/35 transition hover:text-fuchsia-400">
-                            Forgot Password?
-                        </button>
-                    </div>
-
-                    <Button
-                        type="submit"
-                        form="form-rhf-demo"
-                        className="h-11 w-full rounded-lg bg-white/8 text-sm font-medium text-white/45 hover:bg-white/10"
-                    >
-                        Log in
-                    </Button>
-
-                    <p className="text-center text-xs text-white/28">
-                        New to Event Booking?{" "}
-                        <button type="button" className="font-medium text-fuchsia-400 transition hover:text-fuchsia-300">
-                            Create account
-                        </button>
-                    </p>
-
-                    <div className="relative text-center text-[11px] text-white/18">
-                        <span className="relative z-10 bg-transparent px-3">Or continue with</span>
-                        <div className="absolute inset-x-0 top-1/2 z-0 h-px -translate-y-1/2 bg-white/10" />
-                    </div>
-
                 </form>
             </CardContent>
+            <CardFooter>
+                <Field orientation="horizontal" >
+                    <Button type="submit" form="form-rhf-demo" className="w-full">
+                        Sign In
+                    </Button>
+                </Field>
+
+            </CardFooter>
+            <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
+                Or continue with
+            </FieldSeparator>
+
+            <CardFooter>
+                <Field>
+                    <Button
+                        onClick={() => handleSocialAuth("google")}
+                        // disabled={isLoading}
+                        variant="outline" type="button">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path
+                                d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
+                                fill="currentColor"
+                            />
+                        </svg>
+                        Login with Google
+                    </Button>
+                    <Button
+                        onClick={() => handleSocialAuth("github")}
+                        // disabled={isLoading}
+                        variant="outline" type="button">
+
+                        <svg
+                            className="w-5 h-5 mr-3"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                        >
+                            <path
+                                fillRule="evenodd"
+                                d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z"
+                                clipRule="evenodd"
+                            />
+                        </svg>
+                        Continue with GitHub
+                    </Button>
+
+                </Field>
+            </CardFooter>
         </Card>
     )
 }

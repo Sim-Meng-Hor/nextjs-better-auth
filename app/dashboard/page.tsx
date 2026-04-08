@@ -1,24 +1,31 @@
-import {cookies} from "next/headers";
+import {cookies, headers} from "next/headers";
 import {redirect} from "next/navigation";
 import {getAdminData} from "@/lib/admin-auth";
+import {DashboardClient} from "@/components/ui/dashboard-client";
+import {getSession} from "better-auth/api";
+import {auth} from "@/lib/auth";
 
-export default async function DashboardPage(){
-    const cookieStore = await cookies()
+export default async  function DashboardPage() {
+    const session = await auth.api.getSession({
+        headers: await headers()
+    })
+    const cookieStore = await cookies();
     const authToken = cookieStore.get("better-auth.session_data")
-    if (!authToken){
+    if (!authToken) {
         redirect("/login")
     }
 
     const token = authToken?.value
-    const response = getAdminData(token)
+    const res = await getAdminData(token)
 
-    // if (response.role !== "admin"){
-    //     redirect("/")
-    // }
-    return (
-        <>
-            {/*<h1>Welcome{response.name}</h1>*/}
-            {/*<h2>Role : {response.role}</h2>*/}
-        </>
-    );
+    if (res.role !== "admin") {
+        redirect("/")
+    }
+    return(
+            <main>
+                <h2>Welcome, {session?.user.name}</h2>
+                <DashboardClient />
+            </main>
+
+);
 }
